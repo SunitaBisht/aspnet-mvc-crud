@@ -1,15 +1,5 @@
-# pine-tree
+# aspnet-mvc-curd
 
-A shopping kart web applicaton.
+Basic CURD operation using ADO.NET , MVC , JQuery , and using Stored Procedure.
 
-### Run:
 
-`dotnet run --project src\PineTree.API`
-
-### Clean:
-
-`dotnet restore`
-
-### Build:
-
-`dotnet build`
