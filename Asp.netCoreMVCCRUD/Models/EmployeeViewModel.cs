@@ -8,7 +8,6 @@ namespace Asp.netCoreMVCCRUD.Models
 {
     public class EmployeeViewModel
     {
-       
         public int EmpId { get; set; }
         [Required]
         public string FirstName { get; set; }
@@ -20,9 +19,11 @@ namespace Asp.netCoreMVCCRUD.Models
         public string ConfirmPassword { get; set; }
         [Required]
         public string Gender { get; set; }
+
         [Required]
         public string Email { get; set; }
-        [Required]
+
+        [Required(ErrorMessage = "Phone is required")]
         public string Phone { get; set; }
     
         public string SecurityQuestion { get; set; }

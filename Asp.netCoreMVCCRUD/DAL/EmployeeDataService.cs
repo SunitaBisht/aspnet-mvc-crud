@@ -2,29 +2,48 @@
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 
-
 namespace Asp.netCoreMVCCRUD.DAL
 {
-    public class EmployeeDataService
+    public interface IEmployeeDataService
+    {
+        /// <summary>
+        /// Creats a Employee into Database.
+        /// </summary>
+        /// <param name="xEmployee">Object of Employee containing all info.</param>
+        /// <returns>No of row affected.</returns>
+        Task<int> Save(Employee xEmployee);
+        Task<IEnumerable<Employee>> Display();
+        Task<Employee> DisplayById(int? EmpId);
+        Task<int> Update(Employee xEmployee);
+        Task<int> Remove(int? EmpId);
+    }
+
+    public class EmployeeDataService : IEmployeeDataService
     {
         private SqlConnection xSqlConnection;
         private SqlCommand xSqlCommand;
         private readonly string connectionString = "Server=(LocalDb)\\MSSQLLocalDB;Database=EmployeeDb;Trusted_Connection=True;MultipleActiveResultSets=True";
 
-
+        /// <summary>
+        /// Creats a Employee into Database.
+        /// </summary>
+        /// <param name="xEmployee">Object of Employee containing all info.</param>
+        /// <returns>No of row affected.</returns>
         public async Task<int> Save(Employee xEmployee)
         {
             if (xEmployee == null)
             {
                 throw new ArgumentNullException("Category can not be null");
             }
+
             using (xSqlConnection = new SqlConnection(connectionString))
             {
-                string cmdText = "INSERT INTO Employees(FirstName,LastName,Password,ConfirmPassword,Gender,Email,Phone,SecurityQuestion,Answer) VALUES (@firstname,@lastname,@password,@confirmpassword,@gender,@email,@phone,@securityquestion,@answer)";
+                string cmdText = "spInsertEmployee";
                 xSqlCommand = new SqlCommand(cmdText, xSqlConnection);
                 xSqlCommand.Parameters.AddWithValue("@firstname", xEmployee.FirstName);
                 xSqlCommand.Parameters.AddWithValue("@lastname", xEmployee.LastName);
@@ -36,6 +55,8 @@ namespace Asp.netCoreMVCCRUD.DAL
                 xSqlCommand.Parameters.AddWithValue("@securityquestion", xEmployee.SecurityQuestion);
                 xSqlCommand.Parameters.AddWithValue("@answer", xEmployee.Answer);
 
+                xSqlCommand.CommandType = CommandType.StoredProcedure;
+
                 await xSqlConnection.OpenAsync();
                 int response = await xSqlCommand.ExecuteNonQueryAsync();
                 await xSqlConnection.CloseAsync();
@@ -43,13 +64,19 @@ namespace Asp.netCoreMVCCRUD.DAL
             }
         }
 
+        /// <summary>
+        /// Display a Employee in index page.
+        /// </summary>
+        /// <returns>List of the employees</returns>
         public async Task<IEnumerable<Employee>> Display()
         {
             List<Employee> xEmployeeList = new List<Employee>();
             using (xSqlConnection = new SqlConnection(connectionString))
             {
-                string cmdText = "SELECT * FROM Employees";
+                string cmdText = "spGetEmployees";
                 xSqlCommand = new SqlCommand(cmdText, xSqlConnection);
+                xSqlCommand.CommandType = CommandType.StoredProcedure;
+
                 await xSqlConnection.OpenAsync();
                 SqlDataReader xSqlDataReader = await xSqlCommand.ExecuteReaderAsync();
 
@@ -70,6 +97,11 @@ namespace Asp.netCoreMVCCRUD.DAL
             }
         }
 
+        /// <summary>
+        /// Get Employee Through Employee Id
+        /// </summary>
+        /// <param name="EmpId"></param>
+        /// <returns>Employee Details</returns>
         public async Task<Employee> DisplayById(int? EmpId)
         {
             Employee xEmployee = null;
@@ -81,9 +113,11 @@ namespace Asp.netCoreMVCCRUD.DAL
             {
                 using (xSqlConnection = new SqlConnection(connectionString))
                 {
-                    string cmdText = "SELECT * FROM Employees WHERE EmpId=@EmpId";
+                    string cmdText = "spGetEmployeeByEmpId";
                     xSqlCommand = new SqlCommand(cmdText, xSqlConnection);
                     xSqlCommand.Parameters.AddWithValue("@EmpId", EmpId);
+                    xSqlCommand.CommandType = CommandType.StoredProcedure;
+
                     await xSqlConnection.OpenAsync();
                     SqlDataReader xSqlDataReader = await xSqlCommand.ExecuteReaderAsync();
                     while (xSqlDataReader.HasRows && await xSqlDataReader.ReadAsync())
@@ -106,6 +140,11 @@ namespace Asp.netCoreMVCCRUD.DAL
                 throw xException;
             }
         }
+        /// <summary>
+        /// Update Employee details into database
+        /// </summary>
+        /// <param name="xEmployee"></param>
+        /// <returns>no. of affected rows updated</returns>
 
         public async Task<int> Update(Employee xEmployee)
         {
@@ -115,7 +154,7 @@ namespace Asp.netCoreMVCCRUD.DAL
             }
             using (xSqlConnection = new SqlConnection(connectionString))
             {
-                string cmdText = "UPDATE Employees SET FirstName= @firstname,LastName=@lastname,Gender=@gender,Email=@email,Phone=@phone WHERE EmpId =@EmpId";
+                string cmdText = "spUpdateEmployeeById";
                 xSqlCommand = new SqlCommand(cmdText, xSqlConnection);
 
                 xSqlCommand.Parameters.AddWithValue("@EmpId", xEmployee.EmpId);
@@ -125,6 +164,8 @@ namespace Asp.netCoreMVCCRUD.DAL
                 xSqlCommand.Parameters.AddWithValue("@email", xEmployee.Email);
                 xSqlCommand.Parameters.AddWithValue("@phone", xEmployee.Phone);
 
+                xSqlCommand.CommandType = CommandType.StoredProcedure;
+
                 await xSqlConnection.OpenAsync();
                 int isUpdated = await xSqlCommand.ExecuteNonQueryAsync();
                 await xSqlConnection.CloseAsync();
@@ -132,6 +173,11 @@ namespace Asp.netCoreMVCCRUD.DAL
             }
         }
 
+        /// <summary>
+        /// Remove Employee Details selected through EmpId
+        /// </summary>
+        /// <param name="EmpId"></param>
+        /// <returns>No. of affected row deleted</returns>
         public async Task<int> Remove(int? EmpId)
         {
             if (EmpId == 0)
@@ -140,9 +186,12 @@ namespace Asp.netCoreMVCCRUD.DAL
             }
             using (xSqlConnection = new SqlConnection(connectionString))
             {
-                string cmdText = "DELETE FROM Employees WHERE EmpId=@EmpId";
+                string cmdText = "spDeleteEmployeeByEmpID";
                 xSqlCommand = new SqlCommand(cmdText, xSqlConnection);
                 xSqlCommand.Parameters.AddWithValue("@EmpId", EmpId);
+                xSqlCommand.CommandType = CommandType.StoredProcedure;
+
+
                 await xSqlConnection.OpenAsync();
                 var isDeleted = await xSqlCommand.ExecuteNonQueryAsync();
                 await xSqlConnection.CloseAsync();

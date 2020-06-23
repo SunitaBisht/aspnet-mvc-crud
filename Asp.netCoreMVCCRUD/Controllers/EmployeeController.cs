@@ -10,7 +10,7 @@ namespace Asp.netCoreMVCCRUD.Controllers
 {
     public class EmployeeController : Controller
     {
-        private readonly EmployeeDataService _dataService;
+        private readonly IEmployeeDataService _dataService;
 
         public EmployeeController()
         {
@@ -32,6 +32,7 @@ namespace Asp.netCoreMVCCRUD.Controllers
             //    Email = Emp.Email,
             //    Phone = Emp.Phone,
             //}).ToList();
+
             List<EmployeeViewModel> employeeViewModelList = new List<EmployeeViewModel>();
             foreach (var employee in result)
             {
